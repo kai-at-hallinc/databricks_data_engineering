@@ -16,7 +16,7 @@ This repository contains materials and programs used in various courses designed
    To download the repository, use the following command:
 
    ```bash
-   git clone https://github.com/your_username/databricks-certifications.git
+   git clone https://github.com/hatchworks/databricks_materials.git
    ```
 
 2. **Set Up Your Environment**
@@ -39,7 +39,7 @@ Contributions are welcome! If you would like to contribute to this repository, p
 2. **Clone Your Fork**
 
    ```bash
-   git clone https://github.com/your_username/databricks-certifications.git
+   git clone https://github.com/hatchworks/databricks_materials.git
    ```
 
 3. **Create a New Branch**
