@@ -1,0 +1,128 @@
+--- Users
+select current_user();
+--- Catalogs and Schemas
+create catalog if not exists catalog-name;
+use catalog catalog-name;
+create schema if not exists schema-name; 
+-- Create/Import Data Tables
+Select the schema - create - table 
+-- Create Tables
+create or replace table table-name as select ....
+-- Query and Visualization 
+select ... from ... where ... -- limit can be used 
+	-- can be exported to csv, excel, txs, dashboard
+	By clicking +, it can be visualized
+		Can be grouped by, etc.
+		The interface is like Power BI 
+Everything can be saved in folders, etc.
+-- Unity Catalog
+	create table catalog.schema.table (....);
+	use catalog.schema;
+	select * from... ;
+	Unity Catalog (Security + Governance + Metastore) 
+	:: SQL Server as a service (security + centralized management)
+		:: Ensures granular access control (column/row/more)
+		:: Tracks data lineage
+		Combines advanced security and centralized management of the metastore.
+		└── Metastore :: "Master" database
+			The foundational level that organizes and stores metadata (catalogs, schemas, tables, views, etc.).
+			└── Catalog :: Specific database
+				Logically groups schemas and represents business domains or functional areas.
+				└── Schema :: Schema within a database
+					Organizes objects within a catalog. Schemas logically separate data.
+					├── Table :: Table
+						Structured data in rows and columns.
+					├── View :: View
+						Logical query providing a SQL-based representation.
+					├── Function :: Custom function
+						UDFs (User Defined Functions) for specific calculations.
+					├── Model :: Model
+						Represents machine learning models managed within Databricks.
+					└── Volume :: Volume
+						Storage for unstructured or semi-structured data (JSON, Parquet, CSV, etc.).
+--------------
+Like a house architecture
+                     +-------------------------------+
+                     |        BI Tools               |
+                     | (Power BI, Tableau, etc.)     |
+                     +-------------------------------+
+                                   |
+                     +-------------------------------+
+                     |   Query and ML Engines        |
+                     | (SQL, Spark, TensorFlow, etc.)|
+                     +-------------------------------+
+                                   |
+                     +-------------------------------+
+                     |       Governance Layers       |
+                     | (Unity Catalog, RBAC, etc.)   |
+                     +-------------------------------+
+                                   |
+                     +-------------------------------+
+                     |        Storage                |
+                     | (Delta Lake on Data Lake)     |
+                     +-------------------------------+
+                                   |
+                     +-------------------------------+
+                     |       Data Sources            |
+                     |   (Databases, APIs, IoT)      |
+                     +-------------------------------+
+--------------
+Stages (per table)
+                            +-------------------+
+                            |  Gold Tables      |
+                            |-------------------|
+                            | Data ready        |
+                            | for BI/Analytics/ |
+                            | ML consumption.   |
+                            |-------------------|
+                            | Operations:       |
+                            | MERGE/OVERWRITE   |
+                            +-------------------+
+                                    ▲
+                                    |
+                            +-------------------+
+                            |  Silver Tables    |
+                            |-------------------|
+                            | Clean and         |
+                            | transformed data. |
+                            | Curated for       |
+                            | analysis.         |
+                            |-------------------|
+                            | Operations:       |
+                            | UPDATE/DELETE     |
+                            +-------------------+
+                                    ▲
+                                    |
+                            +-------------------+
+                            |  Bronze Tables    |
+                            |-------------------|
+                            | Raw, unprocessed  |
+                            | data, initial     |
+                            | ingestion.        |
+                            |-------------------|
+                            | Operations:       |
+                            | INSERT            |
+                            +-------------------+
+-- Databricks Partner Connect
+                  +---------------------------+
+                  |    Databricks Workspace   |
+                  +---------------------------+
+                              |
+              +-------------------------------------+
+              |     Databricks Partner Connect     |
+              +-------------------------------------+
+                              |
+     ------------------------------------------------------
+     |                         |                         |
++-------------+        +-------------+         +-----------------+
+|  ETL / ELT  |        | BI / Visual |         |  Machine Learning|
+| (Fivetran,  |        | (Tableau,   |         | (H2O.ai,         |
+| dbt, etc.)  |        | Power BI)   |         | DataRobot)       |
++-------------+        +-------------+         +-----------------+
+                              |
+                  +-------------------------+
+                  |   Data Governance       |
+                  |  (Collibra, Immuta,     |
+                  |   Alation)              |
+                  +-------------------------+
+

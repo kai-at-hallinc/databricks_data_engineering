@@ -1,0 +1,244 @@
+1. Fundamental Concepts
+1. Database SQL
+    Queries:
+        Allows performing standard SQL queries on tables, views, and other objects within schemas and catalogs.
+    Visualizations:
+        Offers tools to create simple visualizations based on SQL queries, such as charts and pivot tables.
+    Permissions and Metadata Management:
+        View and manage access permissions for tables and other objects.
+        Examine table structures, data, and their histories.
+    Object Definition:
+        Create and manage objects like:
+        Functions.
+        Tables (managed and external).
+        Schemas.
+        Views.
+    Inline Languages:
+        Support for languages like Python or PostgreSQL, facilitating integration with other engines or tools.
+    Integrations and Connections:
+        Enables connecting Databricks with diverse data sources (data lakes, external databases, APIs, etc.).
+    Script Editing and Visualization:
+        Objects like functions, tables, and views can be reviewed and modified in script format.
+2. Databricks SQL
+    Based on ANSI SQL:
+        Databricks SQL is an extension of the ANSI SQL standard, meaning it inherits the basic SQL functionalities, such as:
+        SELECT, INSERT, UPDATE, DELETE.
+        Aggregation functions (SUM, AVG, etc.).
+        Queries and joins (JOIN, GROUP BY, ORDER BY).
+        Table and database management (CREATE TABLE, DROP TABLE).
+    Specific Extensions for Databricks SQL:
+        Beyond standard SQL, Databricks SQL introduces specific functions designed to work within the Databricks ecosystem, such as:
+        Advanced operations for Delta Lake (MERGE, OPTIMIZE, VACUUM).
+        Functions for complex structures like arrays and maps (EXPLODE, TRANSFORM).
+        Support for advanced aggregations like ROLLUP and CUBE.
+        Operations with temporal logic and version control (TIME TRAVEL).
+    Additional Capabilities:
+        Direct integration with unstructured and semi-structured data stored in formats like JSON, Parquet, and Delta.
+        Support for user-defined functions (UDFs) in languages like Python or Scala.
+        Optimized queries for distributed and scalable environments.
+3. Delta Lake
+    Delta Lake is a transactional and optimized storage layer for data lakes.
+    It is part of the Databricks ecosystem and combines the benefits of a data warehouse with the flexibility of a data lake.
+    Key Features of Delta Lake:
+        1. ACID Transactions:
+            - Ensures data integrity and consistency.
+            - Supports operations like INSERT, UPDATE, DELETE, and MERGE.
+        2. Data Versioning (Time Travel):
+            - Allows access to historical versions of data.
+            - Ideal for audits, debugging, and retrospective analyses.
+        3. Schema Evolution:
+            - Handles schema changes in tables without disrupting existing workflows.
+            - Safely add new columns.
+        4. Compatibility with Streaming and Batch:
+            - Processes real-time (streaming) and historical (batch) data in the same tables.
+        5. High Performance:
+            - Uses indexes, partitions, and compaction to improve query speed.
+            - Commands like OPTIMIZE and ZORDER accelerate queries.
+        6. Open Format:
+            - Based on the Parquet format, compatible with big data tools.
+        7. Data Quality:
+            - Defines and validates quality rules to ensure accurate data.
+    Basic Commands:
+        - Create a Delta Table:
+            CREATE TABLE my_table
+            USING DELTA
+            AS SELECT * FROM source_table;
+        - Query Previous Versions (Time Travel):
+            SELECT * FROM my_table VERSION AS OF 3;
+        - Update Data:
+            UPDATE my_table
+            SET column_name = 'new_value'
+            WHERE condition;
+        - Delete Data:
+            DELETE FROM my_table
+            WHERE condition;
+        - Optimize Files:
+            OPTIMIZE my_table;
+    Key Benefits:
+        - ACID Transactions:
+            Ensure consistency and reliability.
+        - Schema Evolution:
+            Supports seamless changes.
+        - Data Versioning:
+            Facilitates audits and historical analyses.
+        - Improved Performance:
+            Fast queries with OPTIMIZE and ZORDER.
+        - Flexible Integration:
+            Supports both batch and streaming.
+    Common Use Cases:
+        1. ETL (Extract, Transform, Load):
+            - Ensures data quality and consistency in ETL processes.
+        2. Data Warehousing in the Data Lake:
+            - Executes fast analytical queries on stored data.
+        3. Machine Learning:
+            - Provides clean and consistent data for machine learning models.
+        4. Auditing and Version Control:
+            - Easily track data changes.
+    Difference Between Delta Lake and a Traditional Data Lake:
+        | Aspect               | Traditional Data Lake | Delta Lake             |
+        |----------------------|-----------------------|------------------------|
+        | ACID Transactions    | No                   | Yes                    |
+        | Schema Evolution     | Limited              | Fully Supported        |
+        | Versioning           | No                   | Yes (Time Travel)      |
+        | Performance          | Basic                | Optimized              |
+2. Data Management
+    1. Data Lake
+        What is a Data Lake?
+        A Data Lake is a storage system that stores large volumes of data in its native format (structured, semi-structured, and unstructured). It is highly scalable and flexible, ideal for handling data from diverse sources.
+        https://www.databricks.com/discover/data-lakes
+        Key Features:
+            - Open Format:
+                Data stored in formats like Parquet, JSON, ORC, and Avro.
+            - Scalability:
+                Handles large volumes of data cost-effectively.
+            - Flexibility:
+                Allows storing data without prior transformations.
+            - Integration with Delta Lake:
+                Enhances traditional data lakes by adding ACID transactions,
+                data versioning, and schema management.
+        Data Lake in Databricks:
+            - In Databricks, data lakes are built on cloud storage:
+                - Amazon S3
+                - Azure Data Lake Storage (ADLS)
+                - Google Cloud Storage
+            - Improved using Delta Lake as an optimized storage layer.
+        Practical Example:
+            CREATE TABLE sales_data
+            USING DELTA
+            LOCATION 's3://my-datalake/sales_data/';
+    2. Streaming https://docs.databricks.com/en/structured-streaming/index.html
+        What is Streaming?
+        Data streaming involves processing and analyzing data streams in real-time as they arrive from various sources. It is ideal for handling moving data like logs, IoT events, and live data.
+        Key Features:
+            - Continuous Processing:
+                Handles unbounded or infinite data streams.
+            - Scalability:
+                Supports large volumes of streaming data.
+            - Integration with Batch:
+                Can combine real-time and historical data in a single table.
+            - Fault Tolerance:
+                Ensures reliable processing with exactly-once semantics.
+        Streaming in Databricks:
+            - Databricks uses Apache Spark Structured Streaming to handle real-time data.
+            - Compatible with Delta Lake, enabling efficient storage and analysis.
+---
+3. Queries and Execution
+    1. Queries
+        What are Queries in Databricks SQL?
+        Queries are SQL statements that allow interaction with data stored in Databricks. They can be used to read, transform, and analyze data from tables, views, and other data sources.
+        Key Features:
+            - Standard SQL Support:
+                Compatible with ANSI SQL, including commands like SELECT, INSERT, UPDATE, DELETE.
+            - Specific Extensions for Databricks:
+                Support for Delta Lake, complex structures (arrays, maps), and advanced operations
+                like MERGE, OPTIMIZE, and ZORDER.
+            - Integration with Delta Tables:
+                Allows working with batch and streaming data in Delta tables.
+        Query Examples:
+            - Basic Query:
+                SELECT name, age
+                FROM customers
+                WHERE age > 30;
+            - Data Aggregation:
+                SELECT region, SUM(sales) AS total_sales
+                FROM sales_data
+                GROUP BY region;
+            - Advanced Operations in Delta Lake:
+                MERGE INTO customers AS target
+                USING updates AS source
+                ON target.id = source.id
+                WHEN MATCHED THEN UPDATE SET name = source.name
+                WHEN NOT MATCHED THEN INSERT (id, name) VALUES (source.id, source.name);
+        Benefits:
+            - Optimized queries for large data volumes.
+            - Compatible with ad hoc analysis and ETL processes.
+            - Integration with visualizations and dashboards.
+    2. Query History
+        What is Query History in Databricks SQL?
+        Query History is a tool that tracks, analyzes, and optimizes queries executed within the Databricks environment. It provides details such as status, duration, user, and resources used by each query.
+        Key Features:
+            - Comprehensive Query Logs:
+                Displays recently executed queries along with their status (Success, Failed).
+            - Performance Analysis:
+                Allows reviewing execution times and plans to identify improvements.
+            - Advanced Filters:
+                Search queries by user, date, status, or query text.
+            - Export Results:
+                Exports query results for external analysis.
+        Usage Example:
+            1. Access Query History:
+                From the Databricks SQL interface, select the "Query History" tab.
+            2. Filter Queries by Time and User:
+                View all queries executed in the last 24 hours by a specific user.
+            3. Review Execution Plan:
+                Open a query to analyze its logical and physical plan, identifying bottlenecks.
+        Benefits:
+            - Facilitates debugging of failed queries.
+            - Helps in optimizing query performance.
+            - Provides transparency in query usage history.
+=============================================================================
+1. Queries
+- Natural Join: Automatically joins tables based on columns with the same name and type.
+- Cross Join: Cartesian product between two tables.
+- Left Anti Join: Returns rows from the left table that have no matches in the right table.
+- Left Semi Join: Returns rows from the left table that have matches in the right table.
+---
+2. ROLLUP and CUBE
+- ROLLUP:
+  GROUP BY ROLLUP (column1, column2, ...);
+  Generates hierarchical subtotals.
+- CUBE:
+  GROUP BY CUBE (column1, column2, ...);
+  Generates subtotals for all possible combinations.
+---
+3. Explode
+- With Arrays:
+  SELECT id, EXPLODE(categories) AS category
+  SELECT id, EXPLODE_OUTER(categories) AS category
+- With Maps:
+  SELECT id, EXPLODE(settings) AS (key, value)
+  SELECT id, key, value
+  FROM example_map
+  LATERAL VIEW EXPLODE(mappings) AS key, value
+---
+4. Arrays
+- EXPLODE with Arrays:
+  - Converts array elements into separate rows.
+- LATERAL VIEW with Maps:
+  SELECT id, key, value
+  FROM example_map
+  LATERAL VIEW EXPLODE(mappings) AS key, value
+---
+5. Function Syntax
+- Can return a scalar value:
+  CREATE FUNCTION square(x INT) RETURNS INT RETURN x * x;
+- Cannot directly access tables:
+  - If advanced logic or tabular data is needed, use another layer like views or temporary tables.
+---
+6. Stored Procedures Syntax
+- Stored Procedures are not supported in Databricks SQL.
+- Alternatives:
+  - Use views for reusable logic.
+  - Use temporary tables for dynamic calculations.
+  - Utilize PySpark or Scala for more advanced logic with parameters.
+
