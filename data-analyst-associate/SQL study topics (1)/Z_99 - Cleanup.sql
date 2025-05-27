@@ -1,0 +1,113 @@
+-- Databricks notebook source
+-- MAGIC %python
+-- MAGIC # =======================================================================================
+-- MAGIC # WARNING: THIS NOTEBOOK WILL PERMANENTLY DELETE ALL RESOURCES CREATED DURING THE WORKSHOP
+-- MAGIC # =======================================================================================
+-- MAGIC #
+-- MAGIC #   READ THIS CAREFULLY BEFORE RUNNING 
+-- MAGIC #
+-- MAGIC # THIS NOTEBOOK IS DESIGNED TO CLEAN UP ALL USER-SPECIFIC RESOURCES GENERATED 
+-- MAGIC # DURING THE DELTA LAKE WORKSHOP. IF YOU RUN THIS, THE FOLLOWING ACTIONS WILL OCCUR:
+-- MAGIC #
+-- MAGIC #  1. ALL TABLES IN YOUR PERSONAL SCHEMA (`sql_review_<username>`) WILL BE DROPPED.
+-- MAGIC #  2. YOUR ENTIRE USER SCHEMA WILL BE DELETED FROM THE UNITY CATALOG.
+-- MAGIC #  3. ALL FILES IN YOUR PERSONAL S3 FOLDER USED BY THE WORKSHOP WILL BE PERMANENTLY REMOVED:
+-- MAGIC #       s3://databricks-hatchworks-main-bucket/external_data/<username>/sql_review/
+-- MAGIC #
+-- MAGIC # THIS ACTION IS IRREVERSIBLE.
+-- MAGIC # THERE IS NO UNDO.
+-- MAGIC # ONCE YOU DELETE IT, IT'S GONE.
+-- MAGIC #
+-- MAGIC # USE THIS ONLY WHEN YOU ARE 100% SURE THAT:
+-- MAGIC # - YOU HAVE FINISHED THE WORKSHOP
+-- MAGIC # - YOU NO LONGER NEED THE TABLES, FILES, OR EXERCISES
+-- MAGIC # - YOU WANT TO CLEAN UP YOUR ENVIRONMENT TO AVOID CLUTTER OR START FRESH
+-- MAGIC #
+-- MAGIC # IF YOU ARE NOT ABSOLUTELY CERTAIN, STOP HERE.
+-- MAGIC #
+-- MAGIC # OTHERWISE, CONTINUE TO EXECUTE THE NOTEBOOK TO CLEAN UP YOUR WORKSHOP ENVIRONMENT.
+-- MAGIC #
+-- MAGIC # =======================================================================================
+-- MAGIC
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.widgets.text("confirm_cleanup", "", "Type 'YES' to confirm cleanup")
+-- MAGIC if dbutils.widgets.get("confirm_cleanup").strip().upper() != "YES":
+-- MAGIC     raise Exception("Cleanup aborted. You must type YES to proceed.")
+-- MAGIC
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC # ---------------------------------------------------------------------------------------
+-- MAGIC # CLEANUP NOTEBOOK: Drop all resources created during the workshop
+-- MAGIC # ---------------------------------------------------------------------------------------
+-- MAGIC # This notebook removes:
+-- MAGIC # - All Delta tables and views created in the user's schema
+-- MAGIC # - The user-specific schema in Unity Catalog
+-- MAGIC # - The user's S3 folder containing any workshop files
+-- MAGIC # ---------------------------------------------------------------------------------------
+-- MAGIC
+-- MAGIC # Setup: get username, schema, and folder path
+-- MAGIC username = spark.sql("SELECT current_user()").collect()[0][0]
+-- MAGIC username_prefix = username.split("@")[0].replace(".", "_")
+-- MAGIC schema_name = f"sql_review_{username_prefix}"
+-- MAGIC folder_path = f"s3://databricks-hatchworks-main-bucket/external_data/{username_prefix}/sql_review"
+-- MAGIC
+-- MAGIC print("CLEANUP STARTED.")
+-- MAGIC print("--------------------------------------------------")
+-- MAGIC print(f"Schema to drop:         {schema_name}")
+-- MAGIC print(f"Folder to delete:       {folder_path}")
+-- MAGIC
+-- MAGIC # Step 1: Drop all tables and views (if schema exists)
+-- MAGIC tables_dropped = []
+-- MAGIC
+-- MAGIC try:
+-- MAGIC     existing_schemas = [s.name for s in spark.catalog.listDatabases()]
+-- MAGIC     
+-- MAGIC     if schema_name in existing_schemas:
+-- MAGIC         spark.sql(f"USE {schema_name}")
+-- MAGIC         tables = spark.catalog.listTables(schema_name)
+-- MAGIC
+-- MAGIC         if tables:
+-- MAGIC             for tbl in tables:
+-- MAGIC                 # Map Spark types to DROP-compatible SQL keywords
+-- MAGIC                 drop_type = "TABLE" if tbl.tableType == "MANAGED" else tbl.tableType
+-- MAGIC                 print(f"Dropping {drop_type.lower()}: {tbl.name}")
+-- MAGIC                 spark.sql(f"DROP {drop_type} IF EXISTS {schema_name}.{tbl.name}")
+-- MAGIC                 tables_dropped.append(tbl.name)
+-- MAGIC         else:
+-- MAGIC             print("No tables or views to drop.")
+-- MAGIC     else:
+-- MAGIC         print(f"Schema {schema_name} does not exist, skipping table/view drop.")
+-- MAGIC except Exception as e:
+-- MAGIC     print(f"[ERROR] Could not list or drop tables/views: {e}")
+-- MAGIC
+-- MAGIC # Step 2: Drop the schema (just in case it still exists)
+-- MAGIC try:
+-- MAGIC     spark.sql(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE")
+-- MAGIC     print(f"Schema dropped:         {schema_name}")
+-- MAGIC except Exception as e:
+-- MAGIC     print(f"[ERROR] Could not drop schema: {e}")
+-- MAGIC
+-- MAGIC # Step 3: Delete user folder in S3 (DBFS path)
+-- MAGIC try:
+-- MAGIC     dbutils.fs.rm(folder_path, recurse=True)
+-- MAGIC     print(f"Folder deleted:         {folder_path}")
+-- MAGIC except Exception as e:
+-- MAGIC     print(f"[ERROR] Could not delete folder: {e}")
+-- MAGIC
+-- MAGIC # Summary
+-- MAGIC print("--------------------------------------------------")
+-- MAGIC print("CLEANUP COMPLETE.")
+-- MAGIC if tables_dropped:
+-- MAGIC     print(f"Tables/views dropped:   {len(tables_dropped)} total")
+-- MAGIC     for t in tables_dropped:
+-- MAGIC         print(f"  - {t}")
+-- MAGIC else:
+-- MAGIC     print("Tables/views dropped:   None")
+-- MAGIC print("You may now safely close this notebook.")
+-- MAGIC print("Your environment has been reset. Goodbye.")
+-- MAGIC
