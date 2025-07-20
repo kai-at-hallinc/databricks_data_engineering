@@ -28,11 +28,6 @@
 
 # COMMAND ----------
 
-# Start a timer so we can benchmark execution duration.
-setup_start = dbgems.clock_start()
-
-# COMMAND ----------
-
 # DBTITLE 0,--i18n-e181db51-2e1b-403c-8a24-4804cfd935ed
 # MAGIC %md
 # MAGIC # Get Class Config
@@ -53,7 +48,10 @@ dbutils.widgets.text(WorkspaceHelper.PARAM_LAB_ID, "", "Lab/Class ID (optional)"
 dbutils.widgets.text(WorkspaceHelper.PARAM_DESCRIPTION, "", "Description (optional)")
 
 # The default spark version
-dbutils.widgets.text(WorkspaceHelper.PARAM_SPARK_VERSION, "11.3.x-cpu-ml-scala2.12", "Spark Version (optional)")
+dbutils.widgets.text(
+    WorkspaceHelper.PARAM_SPARK_VERSION,
+    "16.4.x-scala2.13", "Spark Version (optional)"
+)
 
 # COMMAND ----------
 
@@ -67,7 +65,15 @@ dbutils.widgets.text(WorkspaceHelper.PARAM_SPARK_VERSION, "11.3.x-cpu-ml-scala2.
 
 # COMMAND ----------
 
-lesson_config.create_schema = False
+lesson_config = LessonConfig(
+    name = None,
+    create_schema = False,
+    create_catalog = False,
+    requires_uc = False,
+    installing_datasets = True,
+    enable_streaming_support = False,
+    enable_ml_support = False
+)
 
 DA = DBAcademyHelper(course_config, lesson_config)
 DA.reset_lesson()
@@ -100,11 +106,13 @@ print(f"workspace_description: {workspace_description}")
 
 # COMMAND ----------
 
-instance_pool_id = DA.workspace.clusters.create_instance_pool(preloaded_spark_version=spark_version,
-                                                              org_id=org_id, 
-                                                              lab_id=lab_id, 
-                                                              workspace_name=workspace_name, 
-                                                              workspace_description=workspace_description)
+instance_pool_id = DA.workspace.clusters.create_instance_pool(
+    preloaded_spark_version=spark_version,
+    org_id=org_id,
+    lab_id=lab_id,
+    workspace_name=workspace_name,
+    workspace_description=workspace_description
+)
 
 # COMMAND ----------
 
@@ -119,21 +127,27 @@ instance_pool_id = DA.workspace.clusters.create_instance_pool(preloaded_spark_ve
 # org_id, lab_id, workspace_name and workspace_description are attached to the
 # instance pool and as such, they are not attached to the all-purpose or jobs policies.
 
-ClustersHelper.create_all_purpose_policy(client=DA.client, 
-                                         instance_pool_id=instance_pool_id, 
-                                         spark_version=spark_version,
-                                         autotermination_minutes_max=180,
-                                         autotermination_minutes_default=120)
+ClustersHelper.create_all_purpose_policy(
+    client=DA.client,
+    instance_pool_id=instance_pool_id,
+    spark_version=spark_version,
+    autotermination_minutes_max=30,
+    autotermination_minutes_default=15
+)
 
-ClustersHelper.create_jobs_policy(client=DA.client, 
-                                  instance_pool_id=instance_pool_id, 
-                                  spark_version=spark_version)
+ClustersHelper.create_jobs_policy(
+    client=DA.client,
+    instance_pool_id=instance_pool_id,
+    spark_version=spark_version
+)
 
-ClustersHelper.create_dlt_policy(client=DA.client, 
-                                 org_id=org_id, 
-                                 lab_id=lab_id, 
-                                 workspace_name=workspace_name, 
-                                 workspace_description=workspace_description)
+ClustersHelper.create_dlt_policy(
+    client=DA.client,
+    org_id=org_id,
+    lab_id=lab_id,
+    workspace_name=workspace_name,
+    workspace_description=workspace_description
+)
 
 # COMMAND ----------
 

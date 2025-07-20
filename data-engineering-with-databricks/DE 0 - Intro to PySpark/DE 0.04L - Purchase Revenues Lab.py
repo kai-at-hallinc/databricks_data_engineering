@@ -42,8 +42,9 @@ display(events_df)
 
 # COMMAND ----------
 
-# TODO
-revenue_df = events_df.FILL_IN
+from pyspark.sql.functions import col
+
+revenue_df = events_df.withColumn("revenue", col("ecommerce.purchase_revenue_in_usd"))
 display(revenue_df)
 
 # COMMAND ----------
@@ -55,10 +56,10 @@ display(revenue_df)
 
 # COMMAND ----------
 
-from pyspark.sql.functions import col
 expected1 = [4351.5, 4044.0, 3985.0, 3946.5, 3885.0, 3590.0, 3490.0, 3451.5, 3406.5, 3385.0]
 result1 = [row.revenue for row in revenue_df.sort(col("revenue").desc_nulls_last()).limit(10).collect()]
 print(result1)
+
 assert(expected1 == result1)
 print("All test pass")
 
@@ -72,8 +73,7 @@ print("All test pass")
 
 # COMMAND ----------
 
-# TODO
-purchases_df = revenue_df.FILL_IN
+purchases_df = revenue_df.filter(col("revenue").isNotNull())
 display(purchases_df)
 
 # COMMAND ----------
@@ -102,8 +102,7 @@ print("All test pass")
 
 # COMMAND ----------
 
-# TODO
-distinct_df = purchases_df.FILL_IN
+distinct_df = purchases_df.select('event_name').distinct()
 display(distinct_df)
 
 # COMMAND ----------
@@ -116,7 +115,7 @@ display(distinct_df)
 # COMMAND ----------
 
 # TODO
-final_df = purchases_df.FILL_IN
+final_df = purchases_df.drop("event_name")
 display(final_df)
 
 # COMMAND ----------
@@ -131,6 +130,7 @@ display(final_df)
 expected_columns = {"device", "ecommerce", "event_previous_timestamp", "event_timestamp",
                     "geo", "items", "revenue", "traffic_source",
                     "user_first_touch_timestamp", "user_id"}
+
 assert(set(final_df.columns) == expected_columns)
 print("All test pass")
 
@@ -143,9 +143,10 @@ print("All test pass")
 
 # COMMAND ----------
 
-# TODO
 final_df = (events_df
-  .FILL_IN
+  .withColumn("revenue", col("ecommerce.purchase_revenue_in_usd"))
+  .filter(col("revenue").isNotNull())
+  .drop("event_name")
 )
 
 display(final_df)
@@ -159,11 +160,13 @@ display(final_df)
 
 # COMMAND ----------
 
+# DBTITLE 1,assert row count
 assert(final_df.count() == 9056)
 print("All test pass")
 
 # COMMAND ----------
 
+# DBTITLE 1,assert columns
 expected_columns = {"device", "ecommerce", "event_previous_timestamp", "event_timestamp",
                     "geo", "items", "revenue", "traffic_source",
                     "user_first_touch_timestamp", "user_id"}
