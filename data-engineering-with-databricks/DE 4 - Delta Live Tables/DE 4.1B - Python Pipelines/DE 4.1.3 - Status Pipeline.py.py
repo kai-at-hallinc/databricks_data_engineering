@@ -64,9 +64,12 @@ import pyspark.sql.functions as F
  
 source = spark.conf.get("source")
  
+@dlt.table(
+    name = "status_bronze"
+)
 def status_bronze():
     return (
-        spark.readStream
+        spark.readStream    
             .format("cloudFiles")
             .option("cloudFiles.format", "json")
             .load(f"{source}/status")
@@ -77,11 +80,10 @@ def status_bronze():
             )
     )
  
- 
 @dlt.table(
-    table_name = "status_silver"
+    name = "status_silver"
     )
-@dlt.expect_or_drop("valid_timestamp", "status_timestamp > 1640995200")
+@dlt.expect_or_drop("valid_timestamp", "status_timestamp > 1540995200")
 def status_silver():
     return (
         dlt.read_stream("status_bronze")
@@ -92,7 +94,7 @@ def status_silver():
 @dlt.table
 def email_updates():
     return (
-        spark.read("status_silver").alias("a")
+        dlt.read("status_silver").alias("a")
             .join(
                 dlt.read("subscribed_order_emails_v").alias("b"), 
                 on="order_id"

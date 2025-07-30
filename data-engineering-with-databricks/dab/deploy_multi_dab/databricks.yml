@@ -1,0 +1,50 @@
+bundle:
+  name: multi_dab
+
+include:
+  - "./resources/multi_dab_job.job.yml"
+
+variables:
+  catalog_name:
+    default: test_catalog
+  schema_name:
+    default: dev
+  schema_prod:
+    default: prod
+  raw_data:
+    default: '/Volumes/databricks_diabetes_health_indicators_dataset/v01/cdc-diabetes/diabetes_binary_5050_raw.csv'
+  row_limit:
+    default: 7500
+  row_count:
+    default: 100000
+  cluster_id:
+    lookup:
+      cluster: dev_compute
+
+targets:
+  development:
+    mode: development
+    default: true
+    workspace:
+      host: 'https://adb-3712271267210417.17.azuredatabricks.net'
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    resources:
+      jobs:
+        multi_dab_job:
+          tasks:
+            - task_key: create_bronze_table
+              existing_cluster_id: ${var.cluster_id}
+            - task_key: create_silver_table
+              existing_cluster_id: ${var.cluster_id}
+    
+  production:
+    mode: production
+    workspace:
+      host: 'https://adb-3712271267210417.17.azuredatabricks.net'
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      schema_name: ${var.schema_prod}
+      row_limit: ${var.row_count}
+
+          
+    

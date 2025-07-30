@@ -35,7 +35,7 @@ event_log_path = f"{DA.paths.storage_location}/system/events"
 event_log = spark.read.format('delta').load(event_log_path)
 event_log.createOrReplaceTempView("event_log_raw")
 
-display(event_log)
+display(event_log.where("event_type = 'flow_progress'"))
 
 # COMMAND ----------
 
@@ -73,9 +73,15 @@ spark.conf.set('latest_update.id', latest_update_id)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT timestamp, details:user_action:action, details:user_action:user_name
-# MAGIC FROM event_log_raw 
-# MAGIC WHERE event_type = 'user_action'
+# MAGIC SELECT
+# MAGIC   timestamp,
+# MAGIC   details:user_action:action,
+# MAGIC   details:user_action:user_name,
+# MAGIC   message
+# MAGIC FROM
+# MAGIC   event_log_raw
+# MAGIC WHERE
+# MAGIC   event_type = 'user_action'
 
 # COMMAND ----------
 
@@ -90,10 +96,14 @@ spark.conf.set('latest_update.id', latest_update_id)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT details:flow_definition.output_dataset, details:flow_definition.input_datasets 
-# MAGIC FROM event_log_raw 
-# MAGIC WHERE event_type = 'flow_definition' AND 
-# MAGIC       origin.update_id = '${latest_update.id}'
+# MAGIC SELECT
+# MAGIC   details:flow_definition.output_dataset,
+# MAGIC   details:flow_definition.input_datasets
+# MAGIC FROM
+# MAGIC   event_log_raw
+# MAGIC WHERE
+# MAGIC   event_type = 'flow_definition'
+# MAGIC   AND origin.update_id = '${latest_update.id}'
 
 # COMMAND ----------
 
@@ -108,20 +118,28 @@ spark.conf.set('latest_update.id', latest_update_id)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT row_expectations.dataset as dataset,
-# MAGIC        row_expectations.name as expectation,
-# MAGIC        SUM(row_expectations.passed_records) as passing_records,
-# MAGIC        SUM(row_expectations.failed_records) as failing_records
+# MAGIC SELECT
+# MAGIC   row_expectations.dataset as dataset,
+# MAGIC   row_expectations.name as expectation,
+# MAGIC   SUM(row_expectations.passed_records) as passing_records,
+# MAGIC   SUM(row_expectations.failed_records) as failing_records
 # MAGIC FROM
-# MAGIC   (SELECT explode(
-# MAGIC             from_json(details :flow_progress :data_quality :expectations,
-# MAGIC                       "array<struct<name: string, dataset: string, passed_records: int, failed_records: int>>")
-# MAGIC           ) row_expectations
-# MAGIC    FROM event_log_raw
-# MAGIC    WHERE event_type = 'flow_progress' AND 
-# MAGIC          origin.update_id = '${latest_update.id}'
+# MAGIC   (
+# MAGIC     SELECT
+# MAGIC       explode(
+# MAGIC         from_json(
+# MAGIC           details:flow_progress:data_quality:expectations,
+# MAGIC           "array<struct<name: string, dataset: string, passed_records: int, failed_records: int>>"
+# MAGIC         )
+# MAGIC       ) row_expectations
+# MAGIC     FROM
+# MAGIC       event_log_raw
+# MAGIC     WHERE
+# MAGIC       event_type = 'flow_progress'
 # MAGIC   )
-# MAGIC GROUP BY row_expectations.dataset, row_expectations.name
+# MAGIC GROUP BY
+# MAGIC   row_expectations.dataset,
+# MAGIC   row_expectations.name
 
 # COMMAND ----------
 

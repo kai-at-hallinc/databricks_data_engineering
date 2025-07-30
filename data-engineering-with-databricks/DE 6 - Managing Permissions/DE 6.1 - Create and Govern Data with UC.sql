@@ -64,19 +64,6 @@
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-aa4c68dc-6dc3-4aca-a352-affc98ac8089
--- MAGIC %md
--- MAGIC ### Create a new catalog
--- MAGIC Let's create a new catalog in our metastore. The variable **`${DA.my_new_catalog}`** was displayed by the setup cell above, containing a unique string generated based on your username.
--- MAGIC
--- MAGIC Run the **`CREATE`** statement below, and click the **Data** icon in the left sidebar to confirm this new catalog was created.
-
--- COMMAND ----------
-
-CREATE CATALOG IF NOT EXISTS ${DA.my_new_catalog}
-
--- COMMAND ----------
-
 -- DBTITLE 0,--i18n-e1f478c8-bbf2-4368-9cdd-e130d2fb7410
 -- MAGIC %md
 -- MAGIC ### Select a default catalog
@@ -90,10 +77,6 @@ CREATE CATALOG IF NOT EXISTS ${DA.my_new_catalog}
 
 -- COMMAND ----------
 
-USE CATALOG ${DA.my_new_catalog}
-
--- COMMAND ----------
-
 -- DBTITLE 0,--i18n-bc4ad8ed-6550-4457-92f7-d88d22709b3c
 -- MAGIC %md
 -- MAGIC ### Create and use a new schema
@@ -103,6 +86,7 @@ USE CATALOG ${DA.my_new_catalog}
 
 -- COMMAND ----------
 
+USE CATALOG dev;
 CREATE SCHEMA IF NOT EXISTS example;
 USE SCHEMA example
 
@@ -118,25 +102,42 @@ USE SCHEMA example
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE heartrate_device (device_id INT, mrn STRING, name STRING, time TIMESTAMP, heartrate DOUBLE);
+CREATE OR REPLACE TABLE heartrate_device(
+  device_id INT, mrn STRING, name STRING, time TIMESTAMP, heartrate DOUBLE
+);
 
-INSERT INTO heartrate_device VALUES
-  (23, "40580129", "Nicholas Spears", "2020-02-01T00:01:58.000+0000", 54.0122153343),
-  (17, "52804177", "Lynn Russell", "2020-02-01T00:02:55.000+0000", 92.5136468131),
-  (37, "65300842", "Samuel Hughes", "2020-02-01T00:08:58.000+0000", 52.1354807863),
-  (23, "40580129", "Nicholas Spears", "2020-02-01T00:16:51.000+0000", 54.6477014191),
-  (17, "52804177", "Lynn Russell", "2020-02-01T00:18:08.000+0000", 95.033344842);
-  
-SELECT * FROM heartrate_device
+INSERT INTO heartrate_device
+  VALUES
+    (23, "40580129", "Nicholas Spears", "2020-02-01T00:01:58.000+0000", 54.0122153343),
+    (17, "52804177", "Lynn Russell", "2020-02-01T00:02:55.000+0000", 92.5136468131),
+    (37, "65300842", "Samuel Hughes", "2020-02-01T00:08:58.000+0000", 52.1354807863),
+    (23, "40580129", "Nicholas Spears", "2020-02-01T00:16:51.000+0000", 54.6477014191),
+    (17, "52804177", "Lynn Russell", "2020-02-01T00:18:08.000+0000", 95.033344842);
+
+SELECT *
+FROM
+  heartrate_device
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW agg_heartrate AS (
-  SELECT mrn, name, MEAN(heartrate) avg_heartrate, DATE_TRUNC("DD", time) date
-  FROM heartrate_device
-  GROUP BY mrn, name, DATE_TRUNC("DD", time)
+CREATE OR REPLACE VIEW agg_heartrate AS
+(
+  SELECT
+    mrn,
+    name,
+    MEAN(heartrate) avg_heartrate,
+    DATE_TRUNC("DD", time) date
+  FROM
+    heartrate_device
+  GROUP BY
+    mrn,
+    name,
+    DATE_TRUNC("DD", time)
 );
-SELECT * FROM agg_heartrate
+
+SELECT *
+FROM
+  agg_heartrate
 
 -- COMMAND ----------
 
@@ -167,9 +168,9 @@ SELECT * FROM agg_heartrate
 
 -- COMMAND ----------
 
--- GRANT USAGE ON CATALOG ${DA.my_new_catalog} TO `account users`;
--- GRANT USAGE ON SCHEMA example TO `account users`;
--- GRANT SELECT ON VIEW agg_heartrate to `account users`
+GRANT USAGE ON CATALOG dev TO `account users`;
+GRANT USAGE ON SCHEMA example TO `account users`;
+GRANT SELECT ON VIEW agg_heartrate to `account users`
 
 -- COMMAND ----------
 
@@ -191,7 +192,7 @@ SELECT * FROM agg_heartrate
 
 -- COMMAND ----------
 
-SELECT "SELECT * FROM ${DA.my_new_catalog}.example.agg_heartrate" AS Query
+SELECT * FROM dev.example.heartrate_device
 
 -- COMMAND ----------
 
@@ -214,10 +215,16 @@ SELECT "SELECT * FROM ${DA.my_new_catalog}.example.agg_heartrate" AS Query
 
 -- COMMAND ----------
 
+USE CATALOG dev;
+USE SCHEMA example;
+
+-- COMMAND ----------
+
 CREATE OR REPLACE FUNCTION mask(x STRING)
   RETURNS STRING
   RETURN CONCAT(REPEAT("*", LENGTH(x) - 2), RIGHT(x, 2)
-); 
+);
+
 SELECT mask('sensitive data') AS data
 
 -- COMMAND ----------
@@ -229,7 +236,7 @@ SELECT mask('sensitive data') AS data
 
 -- COMMAND ----------
 
--- GRANT EXECUTE ON FUNCTION mask to `account users`
+GRANT EXECUTE ON FUNCTION dev.example.mask to `account users`
 
 -- COMMAND ----------
 
@@ -241,7 +248,7 @@ SELECT mask('sensitive data') AS data
 
 -- COMMAND ----------
 
-SELECT "SELECT ${DA.my_new_catalog}.example.mask('sensitive data') AS data" AS Query
+SELECT dev.example.mask('sensitive data') AS data
 
 -- COMMAND ----------
 
@@ -275,42 +282,26 @@ SELECT "SELECT ${DA.my_new_catalog}.example.mask('sensitive data') AS data" AS Q
 
 CREATE OR REPLACE VIEW agg_heartrate AS
 SELECT
-  CASE WHEN
-    is_account_group_member('account users') THEN 'REDACTED'
+  CASE
+    WHEN is_account_group_member('account users') THEN 'REDACTED'
     ELSE mrn
   END AS mrn,
-  CASE WHEN
-    is_account_group_member('account users') THEN 'REDACTED'
+  CASE
+    WHEN is_account_group_member('account users') THEN 'REDACTED'
     ELSE name
   END AS name,
   MEAN(heartrate) avg_heartrate,
   DATE_TRUNC("DD", time) date
-  FROM heartrate_device
-  GROUP BY mrn, name, DATE_TRUNC("DD", time)
+FROM
+  heartrate_device
+GROUP BY
+  mrn,
+  name,
+  DATE_TRUNC("DD", time)
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-01381247-0c36-455b-b64c-22df863d9926
--- MAGIC %md
--- MAGIC
--- MAGIC Re-issue the grant.
-
--- COMMAND ----------
-
--- GRANT SELECT ON VIEW agg_heartrate to `account users`
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-0bf9bd34-2351-492c-b6ef-e48241339d0f
--- MAGIC %md
--- MAGIC
--- MAGIC Now, revisit Databricks SQL and rerun the query on the *gold* view. Run the cell below to generate this query. 
--- MAGIC
--- MAGIC We will see that the *mrn* and *name* column values have been redacted.
-
--- COMMAND ----------
-
-SELECT "SELECT * FROM ${DA.my_new_catalog}.example.agg_heartrate" AS Query
+SELECT * FROM dev.example.agg_heartrate
 
 -- COMMAND ----------
 
@@ -328,23 +319,17 @@ SELECT
   time,
   device_id,
   heartrate
-FROM heartrate_device
+FROM
+  heartrate_device
 WHERE
-  CASE WHEN
-    is_account_group_member('account users') THEN device_id < 30
+  CASE
+    WHEN is_account_group_member('account users') THEN device_id < 30
     ELSE TRUE
   END
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-69bc283c-f426-4ba2-b296-346c69de1c20
--- MAGIC %md
--- MAGIC
--- MAGIC Re-issue the grant.
-
--- COMMAND ----------
-
--- GRANT SELECT ON VIEW agg_heartrate to `account users`
+SELECT * FROM dev.example.agg_heartrate
 
 -- COMMAND ----------
 
@@ -364,30 +349,22 @@ WHERE
 
 CREATE OR REPLACE VIEW agg_heartrate AS
 SELECT
-  CASE WHEN
-    is_account_group_member('account users') THEN mask(mrn)
+  CASE
+    WHEN is_account_group_member('account users') THEN mask(mrn)
     ELSE mrn
   END AS mrn,
   time,
   device_id,
   heartrate
-FROM heartrate_device
+FROM
+  heartrate_device
 WHERE
-  CASE WHEN
-    is_account_group_member('account users') THEN device_id < 30
+  CASE
+    WHEN is_account_group_member('account users') THEN device_id < 30
     ELSE TRUE
-  END
+  END;
 
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-735fa71c-0d31-4484-9736-30dc098dee8d
--- MAGIC %md
--- MAGIC
--- MAGIC Re-issue the grant.
-
--- COMMAND ----------
-
--- GRANT SELECT ON VIEW agg_heartrate to `account users`
+SELECT * FROM dev.example.agg_heartrate
 
 -- COMMAND ----------
 
@@ -415,39 +392,11 @@ SHOW VIEWS
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-40599e0f-47f9-46da-be2b-7b856da0cba1
--- MAGIC %md
--- MAGIC In the above two statements, we didn't specify a schema since we are relying on the defaults we selected. Alternatively, we could have been more explicit using a statement like **`SHOW TABLES IN example`**.
--- MAGIC
--- MAGIC Now let's step up a level in the hierarchy and take inventory of the schemas in our catalog. Once again, we are leveraging the fact that we have a default catalog selected. If we wanted to be more explicit, we could use something like **`SHOW SCHEMAS IN ${DA.my_new_catalog}`**.
-
--- COMMAND ----------
-
 SHOW SCHEMAS
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-943178c2-9ab3-4941-ac1a-70b63103ecb7
--- MAGIC %md
--- MAGIC The *example* schema, of course, is the one we created earlier. The *default* schema is created by default as per SQL conventions when creating a new catalog.
--- MAGIC
--- MAGIC Finally, let's list the catalogs in our metastore.
-
--- COMMAND ----------
-
 SHOW CATALOGS
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-e8579147-7d9a-4b27-b0e9-3ab6c4ec9a0c
--- MAGIC %md
--- MAGIC There may be more entries than you were expecting. At a minimum, you will see:
--- MAGIC * A catalog beginning with the prefix *dbacademy_*, which is the one we created earlier.
--- MAGIC * *hive_metastore*, which is not a real catalog in the metastore, but rather a virtual representation of the workspace local Hive metastore. Use this to access workspace-local tables and views.
--- MAGIC * *main*, a catalog which is created by default with each new metastore.
--- MAGIC * *samples*, another virtual catalog that presents example datasets provided by Databricks
--- MAGIC
--- MAGIC There may be more catalogs present depending on the historical activity in your metastore.
 
 -- COMMAND ----------
 
@@ -459,47 +408,19 @@ SHOW CATALOGS
 
 -- COMMAND ----------
 
--- SHOW GRANTS ON VIEW agg_heartrate
+SHOW GRANTS ON VIEW agg_heartrate
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-98d1534e-a51c-45f6-83d0-b99549ccc279
--- MAGIC %md
--- MAGIC Currenly there is only the **SELECT** grant that we just set up. Now let's check the grants on *silver*.
+SHOW GRANTS ON TABLE heartrate_device
 
 -- COMMAND ----------
 
--- SHOW GRANTS ON TABLE heartrate_device
+SHOW GRANTS ON SCHEMA example
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-591b3fbb-7ed3-4e88-b435-3750b212521d
--- MAGIC %md
--- MAGIC There are no grants on this table currently. Only we, the data owner, can access this table directly. Anyone with permission to access the *gold* view, for which we are also the data owner, has the ability to access this table indirectly.
--- MAGIC
--- MAGIC Now let's look at the containing schema.
-
--- COMMAND ----------
-
--- SHOW GRANTS ON SCHEMA example
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-ab78d60b-a596-4a19-80ae-a5d742169b6c
--- MAGIC %md
--- MAGIC Currently we see the **USAGE** grant we set up earlier.
--- MAGIC
--- MAGIC Now let's examine the catalog.
-
--- COMMAND ----------
-
--- SHOW GRANTS ON CATALOG ${DA.my_new_catalog}
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-62f7e069-7260-4a48-9676-16088958cffc
--- MAGIC %md
--- MAGIC Likewise, we see **USAGE** which we granted moments ago.
+SHOW GRANTS ON CATALOG dev
 
 -- COMMAND ----------
 
@@ -511,27 +432,15 @@ SHOW CATALOGS
 
 -- COMMAND ----------
 
--- SHOW GRANTS ON FUNCTION mask
+SHOW GRANTS ON FUNCTION mask
 
 -- COMMAND ----------
 
--- DBTITLE 0,--i18n-9495b822-96bd-4fe5-aed7-9796ffd722d0
--- MAGIC %md
--- MAGIC Now let's revoke this grant.
+REVOKE EXECUTE ON FUNCTION mask FROM `account users`
 
 -- COMMAND ----------
 
--- REVOKE EXECUTE ON FUNCTION mask FROM `account users`
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-c599d523-08cc-4d39-994d-ce919799c276
--- MAGIC %md
--- MAGIC Now let's re-examine the access, which will now be empty.
-
--- COMMAND ----------
-
--- SHOW GRANTS ON FUNCTION mask
+SHOW GRANTS ON FUNCTION mask
 
 -- COMMAND ----------
 
@@ -546,7 +455,7 @@ SHOW CATALOGS
 
 -- COMMAND ----------
 
--- REVOKE USAGE ON CATALOG ${DA.my_new_catalog} FROM `account users`
+REVOKE USAGE ON CATALOG dev FROM `account users`
 
 -- COMMAND ----------
 
@@ -565,7 +474,7 @@ SHOW CATALOGS
 -- COMMAND ----------
 
 USE CATALOG hive_metastore;
-DROP CATALOG IF EXISTS ${DA.my_new_catalog} CASCADE;
+DROP CATALOG IF EXISTS adm_kai_hall_2ldo_da CASCADE;
 
 -- COMMAND ----------
 

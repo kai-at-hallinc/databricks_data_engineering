@@ -173,9 +173,12 @@ SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/sales-30m`
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW users_update AS 
-SELECT *, current_timestamp() AS updated 
-FROM parquet.`${da.paths.datasets}/ecommerce/raw/users-30m`
+CREATE OR REPLACE TEMP VIEW users_update AS
+SELECT
+  *,
+  current_timestamp() AS updated
+FROM
+  parquet.`${da.paths.datasets}/ecommerce/raw/users-30m`
 
 -- COMMAND ----------
 

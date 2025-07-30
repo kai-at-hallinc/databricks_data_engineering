@@ -78,7 +78,7 @@ DESCRIBE SCHEMA EXTENDED ${da.schema_name}_default_location;
 
 -- COMMAND ----------
 
-DESCRIBE SCHEMA santiago_ortiz_be24_da_delp_custom_location
+DESCRIBE SCHEMA ${da.schema_name}_custom_location
 
 -- COMMAND ----------
 
@@ -96,10 +96,15 @@ DESCRIBE SCHEMA santiago_ortiz_be24_da_delp_custom_location
 
 USE ${da.schema_name}_default_location;
 
-CREATE OR REPLACE TABLE managed_table (width INT, length INT, height INT);
-INSERT INTO managed_table 
-VALUES (3, 2, 1);
-SELECT * FROM managed_table;
+CREATE OR REPLACE TABLE managed_table(width INT, length INT, height INT);
+
+INSERT INTO managed_table
+  VALUES (3, 2, 1);
+
+SELECT
+  *
+FROM
+  managed_table;
 
 -- COMMAND ----------
 
@@ -125,9 +130,9 @@ DESCRIBE DETAIL managed_table;
 
 -- COMMAND ----------
 
--- MAGIC %python 
+-- MAGIC %python
 -- MAGIC tbl_location = spark.sql(f"DESCRIBE DETAIL managed_table").first().location
--- MAGIC # tbl_location = dbfs:/user/hive/warehouse/santiago_ortiz_be24_da_delp_default_location.db/managed_table
+-- MAGIC
 -- MAGIC print(tbl_location)
 -- MAGIC
 -- MAGIC files = dbutils.fs.ls(tbl_location)
@@ -179,10 +184,19 @@ CREATE OR REPLACE TEMPORARY VIEW temp_delays USING CSV OPTIONS (
   header = "true",
   mode = "FAILFAST" -- abort file parsing with a RuntimeException if any malformed lines are encountered
 );
-CREATE OR REPLACE TABLE external_table LOCATION '${da.paths.working_dir}/external_table' AS
-  SELECT * FROM temp_delays;
 
-SELECT * FROM external_table; 
+CREATE OR REPLACE TABLE external_table
+LOCATION '${da.paths.working_dir}/external_table' AS
+SELECT
+  *
+FROM
+  temp_delays;
+
+SELECT
+  *
+FROM
+  external_table
+Limit (10);
 
 -- COMMAND ----------
 

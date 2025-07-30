@@ -3,15 +3,24 @@
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE recordings_bronze
-AS SELECT current_timestamp() receipt_time, input_file_name() source_file, *
-  FROM cloud_files("${source}", "json", map("cloudFiles.schemaHints", "time DOUBLE"))
+CREATE OR REFRESH STREAMING LIVE TABLE recordings_bronze AS
+SELECT
+  current_timestamp() receipt_time,
+  input_file_name() source_file,
+  *
+FROM
+  cloud_files("${source}", "json", map("cloudFiles.schemaHints", "time DOUBLE"))
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE pii
-AS SELECT *
-  FROM cloud_files("${datasets_path}/healthcare/patient", "csv", map("header", "true", "cloudFiles.inferColumnTypes", "true"))
+CREATE OR REFRESH STREAMING LIVE TABLE pii AS
+SELECT *
+FROM
+  cloud_files(
+    "${datasets_path}/healthcare/patient",
+    "csv",
+    map("header", "true", "cloudFiles.inferColumnTypes", "true")
+  )
 
 -- COMMAND ----------
 

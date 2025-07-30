@@ -36,6 +36,14 @@
 
 -- COMMAND ----------
 
+-- MAGIC %python
+-- MAGIC
+-- MAGIC _create_silver()
+-- MAGIC _create_gold()
+-- MAGIC
+
+-- COMMAND ----------
+
 -- DBTITLE 0,--i18n-ef87e152-8e6a-4fd9-8cc7-579545aa01f9
 -- MAGIC %md
 -- MAGIC Let's examine the contents of the **silver** table.
@@ -56,10 +64,20 @@ SELECT * FROM silver.heartrate_device
 
 -- COMMAND ----------
 
-CREATE OR REPLACE VIEW gold.heartrate_avgs AS (
-  SELECT mrn, name, MEAN(heartrate) avg_heartrate, DATE_TRUNC("DD", time) date
-  FROM silver.heartrate_device
-  GROUP BY mrn, name, DATE_TRUNC("DD", time))
+CREATE OR REPLACE VIEW gold.heartrate_avgs AS
+(
+  SELECT
+    mrn,
+    name,
+    MEAN(heartrate) avg_heartrate,
+    DATE_TRUNC("DD", time) date
+  FROM
+    silver.heartrate_device
+  GROUP BY
+    mrn,
+    name,
+    DATE_TRUNC("DD", time)
+)
 
 -- COMMAND ----------
 
@@ -130,11 +148,6 @@ SELECT * FROM gold.heartrate_avgs
 
 -- COMMAND ----------
 
--- MAGIC %python
--- MAGIC print(f"SELECT * FROM gold.heartrate_avgs")
-
--- COMMAND ----------
-
 -- DBTITLE 0,--i18n-330f0448-6bef-42bc-930d-1716886c97fb
 -- MAGIC %md
 -- MAGIC Notice that the query succeeds and the output is identical to the output above, as expected.
@@ -182,34 +195,26 @@ SELECT * FROM gold.heartrate_avgs
 
 CREATE OR REPLACE VIEW gold.heartrate_avgs AS
 SELECT
-  CASE WHEN
-    is_account_group_member('account users') THEN 'REDACTED'
+  CASE
+    WHEN is_account_group_member('account users') THEN 'REDACTED'
     ELSE mrn
   END AS mrn,
-  CASE WHEN
-    is_account_group_member('account users') THEN 'REDACTED'
+  CASE
+    WHEN is_account_group_member('account users') THEN 'REDACTED'
     ELSE name
   END AS name,
   MEAN(heartrate) avg_heartrate,
   DATE_TRUNC("DD", time) date
-  FROM silver.heartrate_device
-  GROUP BY mrn, name, DATE_TRUNC("DD", time)
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-c5c4afac-2736-4a57-be57-55535654a227
--- MAGIC %md
--- MAGIC Now let's reissue the grant on the updated view.
+FROM
+  silver.heartrate_device
+GROUP BY
+  mrn,
+  name,
+  DATE_TRUNC("DD", time)
 
 -- COMMAND ----------
 
 -- GRANT SELECT ON VIEW gold.heartrate_avgs to `account users`
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-271fb0d5-34f1-435f-967e-4cc650facd01
--- MAGIC %md
--- MAGIC Let's query the view, which will yield unfiltered output (assuming the current user has not been added to the **analysts** group).
 
 -- COMMAND ----------
 
@@ -299,18 +304,6 @@ SELECT * FROM gold_allhr
 -- DBTITLE 0,--i18n-c379505f-ebad-474d-9dad-92fa8a7a7ee9
 -- MAGIC %md
 -- MAGIC Re-run the query against **gold_allhr** one last time in the Databricks SQL environment. Notice that, in addition to some rows being filtered, the **mrn** column is masked such that only the last two digits are displayed. This provides enough information to correlate records against known patients, but in and of itself does not divulge any PII.
-
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-8828d381-084f-43fa-afc3-a5a2ba170aeb
--- MAGIC %md
--- MAGIC ## Clean up
--- MAGIC Run the following cell to remove assets that were used in this example.
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC DA.cleanup()
 
 -- COMMAND ----------
 

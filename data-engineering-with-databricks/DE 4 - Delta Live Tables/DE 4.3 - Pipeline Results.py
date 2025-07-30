@@ -50,6 +50,7 @@
 
 # MAGIC %sql
 # MAGIC SELECT * FROM orders_bronze
+# MAGIC limit 10
 
 # COMMAND ----------
 
@@ -146,7 +147,7 @@ display(spark.sql(f"SELECT * FROM delta.`{DA.paths.storage_location}/system/even
 
 # COMMAND ----------
 
-files = dbutils.fs.ls(f"{DA.paths.storage_location}/tables")
+files = dbutils.fs.ls(f"{DA.paths.storage_location}/schemas/developers_pxmu_da_delp_pipeline_demo/tables/orders_silver")
 display(files)
 
 # COMMAND ----------

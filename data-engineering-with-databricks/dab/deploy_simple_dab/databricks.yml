@@ -1,0 +1,39 @@
+bundle:
+  name: simple_dab
+
+resources:
+  jobs:
+    simple_dab:
+      name: simple_dab
+      tasks:
+        - task_key: create_bronze
+          notebook_task:
+            notebook_path: ./src/create_bronze_table.py
+            source: WORKSPACE
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: false
+        - task_key: create_silver
+          depends_on:
+            - task_key: create_bronze
+          notebook_task:
+            notebook_path: ./src/create_silver_table.py
+            source: WORKSPACE
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: false
+      queue:
+        enabled: true
+      parameters:
+        - name: catalog_name
+          default: test_catalog
+        - name: target
+          default: development
+      performance_target: PERFORMANCE_OPTIMIZED
+
+targets:
+
+  development:
+    mode: development
+    default: true
+    workspace:
+      host: 'https://adb-3712271267210417.17.azuredatabricks.net'
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

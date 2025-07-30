@@ -77,7 +77,6 @@
 
 -- COMMAND ----------
 
--- TODO
 CREATE OR REPLACE TABLE events_raw (
   key BINARY,
   offset BIGINT,
@@ -129,7 +128,6 @@ DESCRIBE EXTENDED events_raw;
 
 -- COMMAND ----------
 
--- TODO
 INSERT INTO events_raw
 SELECT * FROM JSON.`${DA.paths.kafka_events}`
 
@@ -144,8 +142,7 @@ SELECT * FROM JSON.`${DA.paths.kafka_events}`
 
 -- COMMAND ----------
 
--- TODO
-SELECT * FROM events_raw LIMIT 100
+SELECT * FROM events_raw LIMIT 10
 
 -- COMMAND ----------
 
@@ -187,8 +184,7 @@ SELECT * FROM events_raw LIMIT 100
 
 -- COMMAND ----------
 
--- TODO
-CREATE OR REPLACE TABLE item_lookup AS 
+CREATE OR REPLACE TABLE item_lookup AS
 SELECT * FROM PARQUET.`${da.paths.datasets}/ecommerce/raw/item-lookup`
 
 -- COMMAND ----------

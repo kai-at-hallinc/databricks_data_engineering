@@ -79,7 +79,7 @@ DESCRIBE EXTENDED sales;
 CREATE OR REPLACE TABLE sales_unparsed AS
 SELECT * FROM csv.`${da.paths.datasets}/ecommerce/raw/sales-csv`;
 
-SELECT * FROM sales_unparsed;
+SELECT * FROM sales_unparsed limit 5;
 
 -- COMMAND ----------
 
@@ -93,19 +93,28 @@ SELECT * FROM sales_unparsed;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TEMP VIEW sales_tmp_vw
-  (order_id LONG, email STRING, transactions_timestamp LONG, total_item_quantity INTEGER, purchase_revenue_in_usd DOUBLE, unique_items INTEGER, items STRING)
-USING CSV
-OPTIONS (
+CREATE OR REPLACE TEMP VIEW sales_tmp_vw (
+  order_id LONG,
+  email STRING,
+  transactions_timestamp LONG,
+  total_item_quantity INTEGER,
+  purchase_revenue_in_usd DOUBLE,
+  unique_items INTEGER,
+  items STRING
+) USING CSV OPTIONS (
   path = "${da.paths.datasets}/ecommerce/raw/sales-csv",
   header = "true",
   delimiter = "|"
 );
 
 CREATE TABLE sales_delta AS
-  SELECT * FROM sales_tmp_vw;
-  
-SELECT * FROM sales_delta
+SELECT *
+FROM 
+  sales_tmp_vw;
+
+SELECT *
+FROM
+  sales_delta
 
 -- COMMAND ----------
 
@@ -124,10 +133,17 @@ SELECT * FROM sales_delta
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE purchases AS
-SELECT order_id AS id, transaction_timestamp, purchase_revenue_in_usd AS price
-FROM sales;
+SELECT
+  order_id AS id,
+  transaction_timestamp,
+  purchase_revenue_in_usd AS price
+FROM
+  sales;
 
-SELECT * FROM purchases
+SELECT *
+FROM
+  purchases
+LIMIT 5
 
 -- COMMAND ----------
 
@@ -140,10 +156,17 @@ SELECT * FROM purchases
 -- COMMAND ----------
 
 CREATE OR REPLACE VIEW purchases_vw AS
-SELECT order_id AS id, transaction_timestamp, purchase_revenue_in_usd AS price
-FROM sales;
+SELECT
+  order_id AS id,
+  transaction_timestamp,
+  purchase_revenue_in_usd AS price
+FROM
+  sales;
 
-SELECT * FROM purchases_vw
+SELECT *
+FROM
+  purchases_vw
+LIMIT 5
 
 -- COMMAND ----------
 
@@ -164,13 +187,13 @@ SELECT * FROM purchases_vw
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE purchase_dates (
-  id STRING, 
-  transaction_timestamp STRING, 
+CREATE OR REPLACE TABLE purchase_dates(
+  id STRING,
+  transaction_timestamp STRING,
   price STRING,
-  date DATE GENERATED ALWAYS AS (
-    cast(cast(transaction_timestamp/1e6 AS TIMESTAMP) AS DATE))
-    COMMENT "generated based on `transactions_timestamp` column")
+  date DATE GENERATED ALWAYS AS (cast(cast(transaction_timestamp / 1e6 AS TIMESTAMP) AS DATE))
+    COMMENT "generated based on `transactions_timestamp` column"
+)
 
 -- COMMAND ----------
 
@@ -206,6 +229,7 @@ WHEN NOT MATCHED THEN
 -- COMMAND ----------
 
 SELECT * FROM purchase_dates
+LIMIT 5
 
 -- COMMAND ----------
 
@@ -220,8 +244,8 @@ SELECT * FROM purchase_dates
 
 -- COMMAND ----------
 
--- INSERT INTO purchase_dates VALUES
--- (1, 600000000, 42.0, "2020-06-18")
+INSERT INTO purchase_dates VALUES
+(1, 600000000, 42.0, "2020-06-18")
 
 -- COMMAND ----------
 
@@ -299,7 +323,8 @@ AS
     input_file_name() source_file
   FROM parquet.`${da.paths.datasets}/ecommerce/raw/users-historical/`;
   
-SELECT * FROM users_pii;
+SELECT * FROM users_pii
+LIMIT 5;
 
 -- COMMAND ----------
 

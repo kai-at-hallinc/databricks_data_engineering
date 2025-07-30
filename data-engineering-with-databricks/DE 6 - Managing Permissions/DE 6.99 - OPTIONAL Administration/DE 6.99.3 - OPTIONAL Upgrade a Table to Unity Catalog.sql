@@ -26,10 +26,6 @@
 
 -- COMMAND ----------
 
--- MAGIC %run ../Includes/Classroom-Setup-06.99.1
-
--- COMMAND ----------
-
 -- DBTITLE 0,--i18n-96a90022-a7bb-40db-8429-30c31cbbf215
 -- MAGIC %md
 -- MAGIC Within the legacy Hive metastore local to this workspace, we now have a table called **movies**, residing in a the user-specific database outlined in the cell output from above. To make things easier, the database name is stored in a Hive variable named *DA.my_schema_name*. Let's preview the data stored in this table using that variable.
@@ -225,11 +221,6 @@ FROM hive_metastore.`${da.my_schema_name}`.movies
 -- MAGIC %md
 -- MAGIC ## Clean up
 -- MAGIC Run the following cell to remove the source database and table that was used in this example.
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC DA.cleanup()
 
 -- COMMAND ----------
 

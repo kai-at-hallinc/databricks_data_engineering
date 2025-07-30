@@ -75,10 +75,6 @@ DA.print_job_config_v1()
 
 # COMMAND ----------
 
-DA.validate_job_v1_config()
-
-# COMMAND ----------
-
 # DBTITLE 0,--i18n-eb8d7811-b356-41d2-ae82-e3762add19f7
 # MAGIC %md
 # MAGIC
@@ -158,10 +154,6 @@ DA.create_pipeline()
 # MAGIC       - Fix the error(s).
 # MAGIC       - Click the **Create task** button.
 # MAGIC       - Validate the configuration.
-
-# COMMAND ----------
-
-DA.validate_job_v2_config()
 
 # COMMAND ----------
 

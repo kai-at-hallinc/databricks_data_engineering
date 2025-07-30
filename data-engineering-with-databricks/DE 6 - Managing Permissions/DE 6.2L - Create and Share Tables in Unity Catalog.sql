@@ -64,24 +64,19 @@ SELECT current_catalog(), current_database()
 
 -- COMMAND ----------
 
-CREATE SCHEMA IF NOT EXISTS my_own_schema;
-USE my_own_schema;
+CREATE EXTERNAL LOCATION IF NOT EXISTS layer_test
+URL 'abfss://datalake@apanalyticsstagingv7zab.dfs.core.windows.net/layer_test'
+WITH (
+  STORAGE CREDENTIAL analytic_storage_credential_staging
+);
 
-SELECT current_database()
+CREATE CATALOG IF NOT EXISTS test_catalog
+MANAGED LOCATION 'abfss://datalake@apanalyticsstagingv7zab.dfs.core.windows.net/layer_test';
 
--- COMMAND ----------
+CREATE SCHEMA IF NOT EXISTS test_catalog.test_schema;
+USE test_catalog.test_schema;
 
--- DBTITLE 0,--i18n-013687c8-6a3f-4c8b-81c1-0afb0429914f
--- MAGIC %md
--- MAGIC ## Create Delta architecture
--- MAGIC
--- MAGIC Let's create and populate a simple collection of schemas and tables persuant to the Delta architecture:
--- MAGIC * A silver schema containing patient heart rate data as read from a medical device
--- MAGIC * A gold schema table that averages heart rate data per patient on a daily basis
--- MAGIC
--- MAGIC For now, there will be no bronze table in this simple example.
--- MAGIC
--- MAGIC Note that we need ony specify the table name below, since we have set a default catalog and schema above.
+SELECT current_database();
 
 -- COMMAND ----------
 
@@ -111,30 +106,25 @@ INSERT INTO patient_silver.heartrate VALUES
 
 CREATE SCHEMA IF NOT EXISTS patient_gold;
 
-CREATE OR REPLACE TABLE patient_gold.heartrate_stats AS (
-  SELECT mrn, name, MEAN(heartrate) avg_heartrate, DATE_TRUNC("DD", time) date
-  FROM patient_silver.heartrate
-  GROUP BY mrn, name, DATE_TRUNC("DD", time)
+CREATE OR REPLACE TABLE patient_gold.heartrate_stats AS
+(
+  SELECT
+    mrn,
+    name,
+    MEAN(heartrate) avg_heartrate,
+    DATE_TRUNC("DD", time) date
+  FROM
+    patient_silver.heartrate
+  GROUP BY
+    mrn,
+    name,
+    DATE_TRUNC("DD", time)
 );
-  
-SELECT * FROM patient_gold.heartrate_stats;  
 
--- COMMAND ----------
-
--- DBTITLE 0,--i18n-3961e85e-2bba-460a-9e00-12e37a07cb87
--- MAGIC %md
--- MAGIC ## Grant access to gold schema [optional]
--- MAGIC
--- MAGIC Now let's allow users in the **account users** group to read from the **gold** schema.
--- MAGIC
--- MAGIC Perform this section by uncommenting the code cells and running them in sequence. 
--- MAGIC You will also be prompted to run some queries. 
--- MAGIC
--- MAGIC To do this:
--- MAGIC 1. Open a separate browser tab and load your Databricks workspace.
--- MAGIC 1. Switch to Databricks SQL by clicking on the app switcher and selecting SQL.
--- MAGIC 1. Create a SQL warehouse following the instructions in *Create SQL Warehouse in Unity Catalog*.
--- MAGIC 1. Prepare to enter queries as instructed below in that environment.
+SELECT
+  *
+FROM
+  patient_gold.heartrate_stats;
 
 -- COMMAND ----------
 
@@ -158,8 +148,7 @@ SELECT * FROM patient_gold.heartrate_stats;
 
 -- COMMAND ----------
 
--- MAGIC %python
--- MAGIC print(f"SELECT * FROM {DA.catalog_name}.patient_gold.heartrate_stats")
+SELECT * FROM test_catalog.patient_gold.heartrate_stats
 
 -- COMMAND ----------
 
@@ -169,7 +158,7 @@ SELECT * FROM patient_gold.heartrate_stats;
 
 -- COMMAND ----------
 
--- GRANT USAGE ON CATALOG ${DA.catalog_name} TO `account users`;
+-- GRANT USAGE ON CATALOG test_catalog TO `account users`;
 -- GRANT USAGE ON SCHEMA patient_gold TO `account users`
 
 -- COMMAND ----------
@@ -190,7 +179,7 @@ SELECT * FROM patient_gold.heartrate_stats;
 
 -- COMMAND ----------
 
--- SHOW GRANT ON TABLE ${DA.catalog_name}.patient_gold.heartrate_stats
+-- SHOW GRANT ON TABLE test_catalog.patient_gold.heartrate_stats
 
 -- COMMAND ----------
 
@@ -200,11 +189,11 @@ SELECT * FROM patient_gold.heartrate_stats;
 
 -- COMMAND ----------
 
-SHOW TABLES IN ${DA.catalog_name}.patient_silver;
+SHOW TABLES IN test_catalog.patient_silver;
 
 -- COMMAND ----------
 
--- SHOW GRANT ON TABLE ${DA.catalog_name}.patient_silver.heartrate
+-- SHOW GRANT ON TABLE test_catalog.patient_silver.heartrate
 
 -- COMMAND ----------
 
@@ -228,13 +217,18 @@ SHOW TABLES IN ${DA.catalog_name}.patient_silver;
 
 -- COMMAND ----------
 
--- SHOW GRANT ON CATALOG `${DA.catalog_name}`
+-- SHOW GRANT ON CATALOG test_catalog
 
 -- COMMAND ----------
 
 -- DBTITLE 0,--i18n-7453efa0-62d0-4af2-901f-c222dd9b2d07
 -- MAGIC %md
 -- MAGIC Currently we see the **USAGE** grant we set up earlier.
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC
 
 -- COMMAND ----------
 

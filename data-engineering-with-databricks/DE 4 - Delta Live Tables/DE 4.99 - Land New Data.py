@@ -39,9 +39,9 @@ DA.dlt_data_factory.load()
 
 # COMMAND ----------
 
-# TODO
-This should run for a little over 5 minutes. To abort
-early, click the Stop Execution button above
+# This should run for a little over 5 minutes. To abort
+# early, click the Stop Execution button above
+
 DA.dlt_data_factory.load(continuous=True, delay_seconds=10)
 
 # COMMAND ----------

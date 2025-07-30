@@ -1,0 +1,26 @@
+resources:
+  jobs:
+    multi_dab_job:
+      name: ${bundle.target}_multi_dab
+      tasks:
+        - task_key: create_bronze_table
+          notebook_task:
+            notebook_path: ../src/create_bronze_table.py
+            source: WORKSPACE
+        - task_key: create_silver_table
+          depends_on:
+            - task_key: create_bronze_table
+          notebook_task:
+            notebook_path: ../src/create_silver_table.py
+            source: WORKSPACE
+      parameters:
+        - name: target
+          default: ${bundle.target}
+        - name: catalog_name
+          default: ${var.catalog_name}
+        - name: schema_name
+          default: ${var.schema_name}
+        - name: source
+          default: ${var.raw_data}
+        - name: row_limit
+          default: ${var.row_limit}

@@ -158,10 +158,6 @@ DA.create_pipeline()
 
 # COMMAND ----------
 
-DA.validate_job_config()
-
-# COMMAND ----------
-
 # MAGIC %md-sandbox
 # MAGIC &copy; 2023 Databricks, Inc. All rights reserved.<br/>
 # MAGIC Apache, Apache Spark, Spark and the Spark logo are trademarks of the <a href="https://www.apache.org/">Apache Software Foundation</a>.<br/>

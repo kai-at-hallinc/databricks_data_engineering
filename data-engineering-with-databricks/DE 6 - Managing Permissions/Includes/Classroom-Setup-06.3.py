@@ -6,7 +6,7 @@
 def _create_silver():
 
     # Use user generated catalog
-    spark.sql(f"USE CATALOG {DA.catalog_name} ")
+    spark.sql(f"USE CATALOG test_catalog ")
     
     # Create just silver schema
     spark.sql("CREATE SCHEMA IF NOT EXISTS silver")
@@ -39,30 +39,8 @@ def _create_silver():
 
 def _create_gold():
      # Use user generated catalog
-    spark.sql(f"USE CATALOG {DA.catalog_name} ")
+    spark.sql(f"USE CATALOG test_catalog ")
       
     # Create just gold schema
     spark.sql("CREATE SCHEMA IF NOT EXISTS gold" )
     
-
-# COMMAND ----------
-
-lesson_config = LessonConfig(name = None,
-                             create_schema = False,
-                             create_catalog = True,
-                             requires_uc = True,
-                             installing_datasets = True,
-                             enable_streaming_support = False,
-                             enable_ml_support = False)
-
-DA = DBAcademyHelper(course_config=course_config,
-                     lesson_config=lesson_config)
-DA.reset_lesson()
-DA.init()
-
-_create_silver()
-_create_gold()
-
-DA.conclude_setup()
-
-

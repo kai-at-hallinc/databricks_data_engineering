@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %pip install dlt
+
+# COMMAND ----------
+
 # MAGIC %md-sandbox
 # MAGIC
 # MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
@@ -58,10 +62,6 @@
 # MAGIC Some developers import **`*`**, while others will only import the functions they need in the present notebook.
 # MAGIC
 # MAGIC These lessons will use **`F`** throughout so that students clearly know which methods are imported from this library.
-
-# COMMAND ----------
-
-# MAGIC %pip install dlt
 
 # COMMAND ----------
 
@@ -175,7 +175,8 @@ def orders_bronze():
 
 @dlt.table(
     comment = "Append only orders with valid timestamps",
-    table_properties = {"quality": "silver"})
+    table_properties = {"quality": "silver"}
+)
 @dlt.expect_or_fail("valid_date", F.col("order_timestamp") > "2021-01-01")
 def orders_silver():
     return (

@@ -84,9 +84,15 @@
 
 -- COMMAND ----------
 
-CREATE OR REFRESH STREAMING LIVE TABLE orders_bronze
-AS SELECT current_timestamp() processing_time, input_file_name() source_file, *
-FROM cloud_files("${source}/orders", "json", map("cloudFiles.inferColumnTypes", "true"))
+CREATE OR REFRESH STREAMING TABLE orders_bronze AS
+SELECT
+	*,
+	CURRENT_TIMESTAMP() AS processing_time,
+	_metadata.file_name AS source_file
+FROM STREAM read_files(
+    "${source}/order",
+    format => "JSON"
+);
 
 -- COMMAND ----------
 
@@ -132,11 +138,14 @@ FROM cloud_files("${source}/orders", "json", map("cloudFiles.inferColumnTypes", 
 -- COMMAND ----------
 
 CREATE OR REFRESH STREAMING LIVE TABLE orders_silver
-(CONSTRAINT valid_date EXPECT (order_timestamp > "2021-01-01") ON VIOLATION FAIL UPDATE)
-COMMENT "Append only orders with valid timestamps"
-TBLPROPERTIES ("quality" = "silver")
-AS SELECT timestamp(order_timestamp) AS order_timestamp, * EXCEPT (order_timestamp, source_file, _rescued_data)
-FROM STREAM(LIVE.orders_bronze)
+  ( CONSTRAINT valid_date EXPECT(order_timestamp > "2021-01-01") ON VIOLATION FAIL UPDATE)
+  COMMENT "Append only orders with valid timestamps"
+  TBLPROPERTIES ("quality" = "silver") AS
+SELECT
+  timestamp(order_timestamp) AS order_timestamp,
+  * EXCEPT (order_timestamp, source_file, _rescued_data)
+FROM
+  STREAM (LIVE.orders_bronze)
 
 -- COMMAND ----------
 
@@ -164,10 +173,14 @@ FROM STREAM(LIVE.orders_bronze)
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE orders_by_date
-AS SELECT date(order_timestamp) AS order_date, count(*) AS total_daily_orders
-FROM LIVE.orders_silver
-GROUP BY date(order_timestamp)
+CREATE OR REFRESH LIVE TABLE orders_by_date AS
+SELECT
+  date(order_timestamp) AS order_date,
+  count(*) AS total_daily_orders
+FROM
+  LIVE.orders_silver
+GROUP BY
+  date(order_timestamp)
 
 -- COMMAND ----------
 
